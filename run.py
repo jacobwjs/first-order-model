@@ -49,6 +49,7 @@ if __name__ == "__main__":
                                         **config['model_params']['common_params'])
 
     if torch.cuda.is_available():
+        print("Using cuda%d for generator" % (opt.device_ids[0]))
         generator.to(opt.device_ids[0])
     if opt.verbose:
         print(generator)
@@ -56,6 +57,7 @@ if __name__ == "__main__":
     discriminator = MultiScaleDiscriminator(**config['model_params']['discriminator_params'],
                                             **config['model_params']['common_params'])
     if torch.cuda.is_available():
+        print("Using cuda%d for discriminator" % (opt.device_ids[0]))
         discriminator.to(opt.device_ids[0])
     if opt.verbose:
         print(discriminator)

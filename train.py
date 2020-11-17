@@ -14,11 +14,18 @@ from frames_dataset import DatasetRepeater
 
 
 def train(config, generator, discriminator, kp_detector, checkpoint, log_dir, dataset, device_ids):
+    print("Logging to: ", log_dir)
     train_params = config['train_params']
 
-    optimizer_generator = torch.optim.Adam(generator.parameters(), lr=train_params['lr_generator'], betas=(0.5, 0.999))
-    optimizer_discriminator = torch.optim.Adam(discriminator.parameters(), lr=train_params['lr_discriminator'], betas=(0.5, 0.999))
-    optimizer_kp_detector = torch.optim.Adam(kp_detector.parameters(), lr=train_params['lr_kp_detector'], betas=(0.5, 0.999))
+    optimizer_generator = torch.optim.Adam(generator.parameters(),
+                                           lr=train_params['lr_generator'],
+                                           betas=(0.5, 0.999))
+    optimizer_discriminator = torch.optim.Adam(discriminator.parameters(),
+                                               lr=train_params['lr_discriminator'],
+                                               betas=(0.5, 0.999))
+    optimizer_kp_detector = torch.optim.Adam(kp_detector.parameters(),
+                                             lr=train_params['lr_kp_detector'],
+                                             betas=(0.5, 0.999))
 
     if checkpoint is not None:
         start_epoch = Logger.load_cpk(checkpoint, generator, discriminator, kp_detector,
@@ -47,6 +54,8 @@ def train(config, generator, discriminator, kp_detector, checkpoint, log_dir, da
 
     with Logger(log_dir=log_dir, visualizer_params=config['visualizer_params'], checkpoint_freq=train_params['checkpoint_freq']) as logger:
         for epoch in trange(start_epoch, train_params['num_epochs']):
+            x = None
+            generated = None
             for x in dataloader:
                 losses_generator, generated = generator_full(x)
 
@@ -79,9 +88,62 @@ def train(config, generator, discriminator, kp_detector, checkpoint, log_dir, da
             scheduler_discriminator.step()
             scheduler_kp_detector.step()
             
-            logger.log_epoch(epoch, {'generator': generator,
-                                     'discriminator': discriminator,
-                                     'kp_detector': kp_detector,
-                                     'optimizer_generator': optimizer_generator,
-                                     'optimizer_discriminator': optimizer_discriminator,
-                                     'optimizer_kp_detector': optimizer_kp_detector}, inp=x, out=generated)
+            if (epoch % 10) == 0:
+                logger.log_epoch(epoch, {'generator': generator,
+                                         'discriminator': discriminator,
+                                         'kp_detector': kp_detector,
+                                         'optimizer_generator': optimizer_generator,
+                                         'optimizer_discriminator': optimizer_discriminator,
+                                         'optimizer_kp_detector': optimizer_kp_detector}, inp=x, out=generated)
+
+
+# with Logger(log_dir=log_dir, visualizer_params=config['visualizer_params'], checkpoint_freq=train_params['checkpoint_freq']) as logger:
+#     for epoch in trange(start_epoch, train_params['num_epochs']):
+#         x = None
+#         generated = None
+#         losses = None
+#         for x in dataloader:
+#             losses_generator, generated = generator_full(x)
+
+#             loss_values = [val.mean() for val in losses_generator.values()]
+#             loss = sum(loss_values)
+
+#             loss.backward()
+#             optimizer_generator.step()
+#             optimizer_generator.zero_grad()
+#             optimizer_kp_detector.step()
+#             optimizer_kp_detector.zero_grad()
+
+#             if train_params['loss_weights']['generator_gan'] != 0:
+#                 optimizer_discriminator.zero_grad()
+#                 losses_discriminator = discriminator_full(x, generated)
+#                 loss_values = [val.mean() for val in losses_discriminator.values()]
+#                 loss = sum(loss_values)
+
+#                 loss.backward()
+#                 optimizer_discriminator.step()
+#                 optimizer_discriminator.zero_grad()
+#             else:
+#                 losses_discriminator = {}
+
+#             losses_generator.update(losses_discriminator)
+#             losses = {key: value.mean().detach().data.cpu().numpy() for key, value in losses_generator.items()}
+#             logger.log_iter(losses=losses)
+
+#         scheduler_generator.step()
+#         scheduler_discriminator.step()
+#         scheduler_kp_detector.step()
+
+#         if (epoch % train_params['checkpoint_freq']) == 0:
+#             ckpt_filename = f'ckpt_epoch{epoch}.pt'
+#             torch.save({
+#                 'epoch': epoch,
+#                 'losses': losses,
+#                 'generator': generator.state_dict(),
+#                 'discriminator': discriminator.state_dict(),
+#                 'kp_detector': kp_detector.state_dict(),
+#                 'optimizer_generator': optimizer_generator.state_dict(),
+#                 'optimizer_discriminator': optimizer_discriminator.state_dict()
+#             }, ckpt_filename)
+# #         break
+

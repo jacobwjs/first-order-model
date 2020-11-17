@@ -67,6 +67,7 @@ class FramesDataset(Dataset):
         self.frame_shape = tuple(frame_shape)
         self.pairs_list = pairs_list
         self.id_sampling = id_sampling
+        
         if os.path.exists(os.path.join(root_dir, 'train')):
             assert os.path.exists(os.path.join(root_dir, 'test'))
             print("Use predefined train-test split.")
@@ -111,7 +112,20 @@ class FramesDataset(Dataset):
             frames = os.listdir(path)
             num_frames = len(frames)
             frame_idx = np.sort(np.random.choice(num_frames, replace=True, size=2))
-            video_array = [img_as_float32(io.imread(os.path.join(path, frames[idx]))) for idx in frame_idx]
+#             print("path: ", path)
+#             print("frames[idx]: ", frames[idx].decode("utf-8"))
+#             video_array = [img_as_float32(io.imread(os.path.join(path, frames[idx]))) for idx in frame_idx]
+            
+            ### TODO:
+            ### - Have a pre-run on the dataset to verify all data is valid.
+            ###
+            try:
+                video_array = [img_as_float32(io.imread(os.path.join(path, frames[_idx_].decode("utf-8")))) for _idx_ in frame_idx]
+            except:
+                # Try our go at another frame_idx as we found something we couldn't load.
+                #
+                self.__getitem__(idx)
+                
         else:
             video_array = read_video(path, frame_shape=self.frame_shape)
             num_frames = len(video_array)
