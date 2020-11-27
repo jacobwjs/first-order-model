@@ -8,7 +8,8 @@ import numpy as np
 from torch.utils.data import Dataset
 import pandas as pd
 from augmentation import AllAugmentationTransform
-import glob
+from os.path import join
+from glob import glob
 
 
 def read_video(name, frame_shape):
@@ -78,11 +79,18 @@ class FramesDataset(Dataset):
             else:
                 train_videos = os.listdir(os.path.join(root_dir, 'train'))
             test_videos = os.listdir(os.path.join(root_dir, 'test'))
+            
+            
             self.root_dir = os.path.join(self.root_dir, 'train' if is_train else 'test')
         else:
             print("Use random train-test split.")
             train_videos, test_videos = train_test_split(self.videos, random_state=random_seed, test_size=0.2)
 
+        # Check for nonsense and remove any directories that lead with '.'
+        #
+        train_videos = [x for x in train_videos if not x.startswith('.')]
+        test_videos = [x for x in test_videos if not x.startswith('.')]    
+            
         if is_train:
             self.videos = train_videos
         else:
@@ -101,29 +109,43 @@ class FramesDataset(Dataset):
     def __getitem__(self, idx):
         if self.is_train and self.id_sampling:
             name = self.videos[idx]
-            path = np.random.choice(glob.glob(os.path.join(self.root_dir, name + '*.mp4')))
+            path = np.random.choice(glob(os.path.join(self.root_dir, name + '*.mp4')))
         else:
             name = self.videos[idx]
             path = os.path.join(self.root_dir, name)
 
         video_name = os.path.basename(path)
 
-        if self.is_train and os.path.isdir(path):
-            frames = os.listdir(path)
+        if self.is_train and os.path.isdir(path):            
+            frames = []
+            
+            # Ensure we're not loading any nonsense (e.g. hidden directories, etc.)
+            #
+            for ext in ('*.jpg', '*.jpeg', '*.png'):
+                frames.extend(glob(join(path, ext)))
+                
             num_frames = len(frames)
             frame_idx = np.sort(np.random.choice(num_frames, replace=True, size=2))
-#             print("path: ", path)
-#             print("frames[idx]: ", frames[idx].decode("utf-8"))
-#             video_array = [img_as_float32(io.imread(os.path.join(path, frames[idx]))) for idx in frame_idx]
             
             ### TODO:
             ### - Have a pre-run on the dataset to verify all data is valid.
             ###
+            _idx_ = None
             try:
-                video_array = [img_as_float32(io.imread(os.path.join(path, frames[_idx_].decode("utf-8")))) for _idx_ in frame_idx]
+#                 video_array = [img_as_float32(io.imread(os.path.join(path, frames[_idx_].decode("utf-8")))) \
+#                                for _idx_ in frame_idx]
+                video_array = []
+                for _idx_ in frame_idx:
+                    try:
+                        frame_path = frames[_idx_].decode("utf-8")
+                    except:
+                        frame_path = frames[_idx_]
+                    
+                    video_array.append(img_as_float32(io.imread(os.path.join(path, frame_path))))
             except:
                 # Try our go at another frame_idx as we found something we couldn't load.
                 #
+                print("Exception on idx: ", _idx_)
                 self.__getitem__(idx)
                 
         else:

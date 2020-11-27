@@ -28,11 +28,14 @@ def train(config, generator, discriminator, kp_detector, checkpoint, log_dir, da
                                              betas=(0.5, 0.999))
 
     if checkpoint is not None:
+        print("Using checkpoint: ", checkpoint)
         start_epoch = Logger.load_cpk(checkpoint, generator, discriminator, kp_detector,
                                       optimizer_generator, optimizer_discriminator,
                                       None if train_params['lr_kp_detector'] == 0 else optimizer_kp_detector)
     else:
         start_epoch = 0
+        
+    print("starting training from epoch: ", start_epoch)
 
     scheduler_generator = MultiStepLR(optimizer_generator, train_params['epoch_milestones'], gamma=0.1,
                                       last_epoch=start_epoch - 1)
@@ -95,55 +98,15 @@ def train(config, generator, discriminator, kp_detector, checkpoint, log_dir, da
                                          'optimizer_generator': optimizer_generator,
                                          'optimizer_discriminator': optimizer_discriminator,
                                          'optimizer_kp_detector': optimizer_kp_detector}, inp=x, out=generated)
-
-
-# with Logger(log_dir=log_dir, visualizer_params=config['visualizer_params'], checkpoint_freq=train_params['checkpoint_freq']) as logger:
-#     for epoch in trange(start_epoch, train_params['num_epochs']):
-#         x = None
-#         generated = None
-#         losses = None
-#         for x in dataloader:
-#             losses_generator, generated = generator_full(x)
-
-#             loss_values = [val.mean() for val in losses_generator.values()]
-#             loss = sum(loss_values)
-
-#             loss.backward()
-#             optimizer_generator.step()
-#             optimizer_generator.zero_grad()
-#             optimizer_kp_detector.step()
-#             optimizer_kp_detector.zero_grad()
-
-#             if train_params['loss_weights']['generator_gan'] != 0:
-#                 optimizer_discriminator.zero_grad()
-#                 losses_discriminator = discriminator_full(x, generated)
-#                 loss_values = [val.mean() for val in losses_discriminator.values()]
-#                 loss = sum(loss_values)
-
-#                 loss.backward()
-#                 optimizer_discriminator.step()
-#                 optimizer_discriminator.zero_grad()
-#             else:
-#                 losses_discriminator = {}
-
-#             losses_generator.update(losses_discriminator)
-#             losses = {key: value.mean().detach().data.cpu().numpy() for key, value in losses_generator.items()}
-#             logger.log_iter(losses=losses)
-
-#         scheduler_generator.step()
-#         scheduler_discriminator.step()
-#         scheduler_kp_detector.step()
-
-#         if (epoch % train_params['checkpoint_freq']) == 0:
-#             ckpt_filename = f'ckpt_epoch{epoch}.pt'
-#             torch.save({
-#                 'epoch': epoch,
-#                 'losses': losses,
-#                 'generator': generator.state_dict(),
-#                 'discriminator': discriminator.state_dict(),
-#                 'kp_detector': kp_detector.state_dict(),
-#                 'optimizer_generator': optimizer_generator.state_dict(),
-#                 'optimizer_discriminator': optimizer_discriminator.state_dict()
-#             }, ckpt_filename)
-# #         break
-
+                
+    #         if (epoch % train_params['checkpoint_freq']) == 0:
+    #             ckpt_filename = f'ckpt_epoch{epoch}.pt'
+    #             torch.save({
+    #                 'epoch': epoch,
+    #                 'losses': losses,
+    #                 'generator': generator.state_dict(),
+    #                 'discriminator': discriminator.state_dict(),
+    #                 'kp_detector': kp_detector.state_dict(),
+    #                 'optimizer_generator': optimizer_generator.state_dict(),
+    #                 'optimizer_discriminator': optimizer_discriminator.state_dict()
+    #             }, ckpt_filename)
