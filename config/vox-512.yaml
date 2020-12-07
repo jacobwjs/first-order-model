@@ -5,6 +5,7 @@ animate_params:
     use_relative_jacobian: true
     use_relative_movement: true
   num_pairs: 50
+  
 dataset_params:
   augmentation_params:
     flip_param:
@@ -15,81 +16,66 @@ dataset_params:
       contrast: 0.1
       hue: 0.1
       saturation: 0.1
-  frame_shape:
-  - 512
-  - 512
-  - 3
+  frame_shape: [512, 512, 3]
   id_sampling: true
   pairs_list: null
-  root_dir: /home/jstaley/video-processing/vox_png_512px_25to150
+  root_dir: /home/jupyter/vox_png_512px
+
 model_params:
   common_params:
-    estimate_jacobian: true
-    num_channels: 3
     num_kp: 10
-  discriminator_params:
-    block_expansion: 32
-    max_features: 512
-    num_blocks: 4
-    scales:
-    - 1
-    sn: true
+    num_channels: 3
+    estimate_jacobian: True
+  kp_detector_params:
+     temperature: 0.1
+     block_expansion: 32
+     max_features: 1024
+     scale_factor: 0.25
+     num_blocks: 5
   generator_params:
     block_expansion: 64
+    max_features: 512
+    num_down_blocks: 2
+    num_bottleneck_blocks: 6
+    estimate_occlusion_map: True
     dense_motion_params:
       block_expansion: 64
       max_features: 1024
       num_blocks: 5
-      scale_factor: 0.125
-    estimate_occlusion_map: true
-    max_features: 512
-    num_bottleneck_blocks: 6
-    num_down_blocks: 2
-  kp_detector_params:
+      scale_factor: 0.25
+  discriminator_params:
+    scales: [1]
     block_expansion: 32
-    max_features: 1024
-    num_blocks: 5
-    scale_factor: 0.125
-    temperature: 0.1
+    max_features: 512
+    num_blocks: 4
+    sn: True
+    
 reconstruction_params:
   format: .mp4
   num_videos: 1000
+  
 train_params:
-  batch_size: 2
-  checkpoint_freq: 50
-  epoch_milestones:
-  - 60
-  - 90
-  loss_weights:
-    discriminator_gan: 1
-    equivariance_jacobian: 10
-    equivariance_value: 10
-    feature_matching:
-    - 10
-    - 10
-    - 10
-    - 10
-    generator_gan: 0
-    perceptual:
-    - 10
-    - 10
-    - 10
-    - 10
-    - 10
-  lr_discriminator: 0.0002
-  lr_generator: 0.0002
-  lr_kp_detector: 0.0002
-  num_epochs: 100
-  num_repeats: 150
-  scales:
-  - 1
-  - 0.5
-  - 0.25
-  - 0.125
+  num_epochs: 200
+  num_repeats: 100
+  epoch_milestones: [160, 190]
+  lr_generator: 2.0e-4
+  lr_discriminator: 2.0e-4
+  lr_kp_detector: 2.0e-4
+  batch_size: 4
+  scales: [1, 0.5, 0.25, 0.125]
+  checkpoint_freq: 5
   transform_params:
-    points_tps: 5
     sigma_affine: 0.05
     sigma_tps: 0.005
+    points_tps: 5
+  loss_weights:
+    generator_gan: 0
+    discriminator_gan: 1
+    feature_matching: [10, 10, 10, 10]
+    perceptual: [10, 10, 10, 10, 10]
+    equivariance_value: 10
+    equivariance_jacobian: 10
+    
 visualizer_params:
   colormap: gist_rainbow
   draw_border: true
