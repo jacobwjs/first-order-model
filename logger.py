@@ -94,6 +94,13 @@ class Logger:
             self.save_cpk()
         self.log_scores(self.names)
         self.visualize_rec(inp, out)
+        
+    def log_epoch_and_checkpoint(self, epoch, models, inp, out):
+        self.epoch = epoch
+        self.models = models
+        self.save_cpk()
+        self.log_scores(self.names)
+        self.visualize_rec(inp, out)
 
 
 class Visualizer:

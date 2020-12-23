@@ -92,21 +92,26 @@ def train(config, generator, discriminator, kp_detector, checkpoint, log_dir, da
             scheduler_kp_detector.step()
             
             if (epoch % 10) == 0:
-                logger.log_epoch(epoch, {'generator': generator,
+                print("EPOCH: ", epoch)
+                print("Logging and saving checkpoint... ", log_dir)
+                logger.log_epoch_and_checkpoint(epoch, 
+                                                {'generator': generator,
+                                                 'discriminator': discriminator,
+                                                 'kp_detector': kp_detector,
+                                                 'optimizer_generator': optimizer_generator,
+                                                 'optimizer_discriminator': optimizer_discriminator,
+                                                 'optimizer_kp_detector': optimizer_kp_detector},
+                                                inp=x, out=generated)
+        
+        # Ensure final epoch is saved.
+        #
+        print("EPOCH: ", epoch)
+        print("Logging and saving checkpoint... ", log_dir)
+        logger.log_epoch_and_checkpoint(epoch, 
+                                        {'generator': generator,
                                          'discriminator': discriminator,
                                          'kp_detector': kp_detector,
                                          'optimizer_generator': optimizer_generator,
                                          'optimizer_discriminator': optimizer_discriminator,
-                                         'optimizer_kp_detector': optimizer_kp_detector}, inp=x, out=generated)
-                
-    #         if (epoch % train_params['checkpoint_freq']) == 0:
-    #             ckpt_filename = f'ckpt_epoch{epoch}.pt'
-    #             torch.save({
-    #                 'epoch': epoch,
-    #                 'losses': losses,
-    #                 'generator': generator.state_dict(),
-    #                 'discriminator': discriminator.state_dict(),
-    #                 'kp_detector': kp_detector.state_dict(),
-    #                 'optimizer_generator': optimizer_generator.state_dict(),
-    #                 'optimizer_discriminator': optimizer_discriminator.state_dict()
-    #             }, ckpt_filename)
+                                         'optimizer_kp_detector': optimizer_kp_detector},
+                                        inp=x, out=generated)

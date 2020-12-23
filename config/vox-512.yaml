@@ -20,6 +20,7 @@ dataset_params:
   id_sampling: true
   pairs_list: null
   root_dir: /home/jupyter/vox_png_512px
+#   root_dir: /home/jupyter/vox_png_test
 
 model_params:
   common_params:
@@ -56,12 +57,12 @@ reconstruction_params:
   
 train_params:
   num_epochs: 200
-  num_repeats: 100
+  num_repeats: 20
+  batch_size: 24
   epoch_milestones: [160, 190]
   lr_generator: 2.0e-4
   lr_discriminator: 2.0e-4
   lr_kp_detector: 2.0e-4
-  batch_size: 4
   scales: [1, 0.5, 0.25, 0.125]
   checkpoint_freq: 5
   transform_params:
