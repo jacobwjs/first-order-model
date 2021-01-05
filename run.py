@@ -33,6 +33,8 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint", default=None, help="path to checkpoint to restore")
     parser.add_argument("--device_ids", default="0", type=lambda x: list(map(int, x.split(','))),
                         help="Names of the devices comma separated.")
+    parser.add_argument("--driving_vid", default=None, help="Path to video to test with during training")
+    parser.add_argument("--source_img", default=None, help="Source image to use with driving video during training")
     parser.add_argument("--verbose", dest="verbose", action="store_true", help="Print model architecture")
     parser.set_defaults(verbose=False)
 
@@ -42,7 +44,7 @@ if __name__ == "__main__":
 
     if opt.log_dir is not None:
         log_dir = os.path.join(opt.log_dir, os.path.basename(opt.config).split('.')[0])
-        log_dir += ' ' + strftime("%d_%m_%y_%H.%M.%S", gmtime())
+        log_dir += '-' + strftime("%d_%m_%y_%H.%M.%S", gmtime())
 #     if opt.checkpoint is not None:
 #         log_dir = os.path.join(*os.path.split(opt.checkpoint)[:-1])
     else:
@@ -85,7 +87,8 @@ if __name__ == "__main__":
 
     if opt.mode == 'train':
         print("Training...")
-        train(config, generator, discriminator, kp_detector, opt.checkpoint, log_dir, dataset, opt.device_ids)
+#         train(config, generator, discriminator, kp_detector, opt.checkpoint, log_dir, dataset, opt.device_ids)
+        train(config, generator, discriminator, kp_detector, opt.checkpoint, log_dir, dataset, opt)
     elif opt.mode == 'reconstruction':
         print("Reconstruction...")
         reconstruction(config, generator, kp_detector, opt.checkpoint, log_dir, dataset)
